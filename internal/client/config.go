@@ -29,6 +29,14 @@ type Config struct {
 var sshTarget = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.@:-]{0,199}$`)
 var nodeID = regexp.MustCompile(`^[a-f0-9]{16}$`)
 
+func DefaultConfigPath() (string, error) {
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("locate user configuration directory: %w", err)
+	}
+	return filepath.Join(dir, "basydra", "client.json"), nil
+}
+
 func (n *Node) Validate() error {
 	n.Name = strings.TrimSpace(n.Name)
 	if n.Name == "" || len(n.Name) > 80 {

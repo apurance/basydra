@@ -27,10 +27,10 @@ Browser → local Basydra client → SSH tunnel / HTTPS → Linux probe
 
 ```powershell
 .\scripts\build.ps1
-.\bin\basydra.exe serve --config .local/client.json
+.\bin\basydra.exe serve
 ```
 
-打开 <http://127.0.0.1:17890>。默认配置为当前目录下 `basydra.json`；指定 `.local/client.json` 可避免将真实节点配置混入源码。
+打开 <http://127.0.0.1:17890>。默认配置固定保存在操作系统的用户配置目录中，与启动工作目录无关：Windows 为 `%APPDATA%\basydra\client.json`，Linux 为 `$XDG_CONFIG_HOME/basydra/client.json`（未设置时使用 `~/.config/basydra/client.json`），macOS 为 `~/Library/Application Support/basydra/client.json`。无参数启动或双击 Windows 可执行文件也使用同一路径；可通过 `serve --config FILE` 显式指定其他配置文件。程序不自动查找或迁移旧配置。
 
 构建脚本从 PATH 查找 Go，沿用当前的 Go 环境与缓存配置，并将临时编译文件放在工作区 `.local/tmp`。`bin/` 和 `.local/` 已排除版本控制。交叉编译不需要 MSVC 或 Linux 工具链。
 

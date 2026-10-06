@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -16,6 +17,39 @@ import (
 )
 
 const testToken = "random-test-token-with-32-characters"
+
+func TestDefaultConfigPersistsAcrossWorkingDirectories(t *testing.T) {
+	dir := t.TempDir()
+	switch runtime.GOOS {
+	case "windows":
+		t.Setenv("APPDATA", dir)
+	case "darwin", "ios":
+		t.Setenv("HOME", dir)
+	default:
+		t.Setenv("XDG_CONFIG_HOME", dir)
+	}
+	userDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	path, err := DefaultConfigPath()
+	if err != nil || path != filepath.Join(userDir, "basydra", "client.json") || !filepath.IsAbs(path) {
+		t.Fatalf("unexpected default configuration path: %q, %v", path, err)
+	}
+	node := Node{ID: "0123456789abcdef", Name: "test", URL: "http://127.0.0.1:19790", SSH: "ai", Token: testToken}
+	if err := saveConfig(path, Config{Version: 1, Nodes: []Node{node}}); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(t.TempDir())
+	reopenedPath, err := DefaultConfigPath()
+	if err != nil || reopenedPath != path {
+		t.Fatalf("working directory changed default path: %q, %v", reopenedPath, err)
+	}
+	loaded, err := LoadConfig(reopenedPath)
+	if err != nil || len(loaded.Nodes) != 1 || loaded.Nodes[0] != node {
+		t.Fatalf("could not reload saved node from new working directory: %v", err)
+	}
+}
 
 func TestNodeValidationProtectsTransportAndSSHArguments(t *testing.T) {
 	for _, n := range []Node{

@@ -37,15 +37,22 @@ func run(ctx context.Context, args []string) error {
 		fmt.Println("Basydra 0.1.0")
 		return nil
 	case "help", "--help", "-h":
-		fmt.Println("Basydra — one client, many nodes.\n\n  basydra serve [--listen 127.0.0.1:17890] [--config basydra.json]\n  basydra agent --token-file FILE [--listen 127.0.0.1:19790]\n  basydra node add --name NAME --url URL --token-file FILE [--ssh HOST]\n  basydra node list\n  basydra node remove --id ID\n  basydra status\n\nNode commands use the running client at http://127.0.0.1:17890 (--client URL).\nAgents require Linux. Client binaries include the entire web UI.")
+		fmt.Println("Basydra — one client, many nodes.\n\n  basydra serve [--listen 127.0.0.1:17890] [--config FILE]\n  basydra agent --token-file FILE [--listen 127.0.0.1:19790]\n  basydra node add --name NAME --url URL --token-file FILE [--ssh HOST]\n  basydra node list\n  basydra node remove --id ID\n  basydra status\n\nClient config defaults to basydra/client.json in the OS user configuration directory.\nNode commands use the running client at http://127.0.0.1:17890 (--client URL).\nAgents require Linux. Client binaries include the entire web UI.")
 		return nil
 	case "serve":
 		f := flag.NewFlagSet("serve", flag.ContinueOnError)
 		listen := f.String("listen", "127.0.0.1:17890", "local UI address")
-		config := f.String("config", "basydra.json", "node configuration file")
+		config := f.String("config", "", "node configuration file (default: OS user configuration directory/basydra/client.json)")
 		interval := f.Duration("interval", 5*time.Second, "poll interval")
 		if err := f.Parse(args[1:]); err != nil {
 			return err
+		}
+		if *config == "" {
+			path, err := client.DefaultConfigPath()
+			if err != nil {
+				return err
+			}
+			*config = path
 		}
 		return client.Run(ctx, *listen, *config, *interval)
 	case "agent":
