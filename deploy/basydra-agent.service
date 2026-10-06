@@ -1,0 +1,25 @@
+[Unit]
+Description=Basydra node-local monitoring probe
+After=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+StateDirectory=basydra
+StateDirectoryMode=0700
+LoadCredential=token:/etc/basydra/agent.token
+ExecStart=/opt/basydra/basydra agent --listen 127.0.0.1:19790 --token-file %d/token --data-dir /var/lib/basydra --interval 5s --retention 24h
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+
+[Install]
+WantedBy=multi-user.target
